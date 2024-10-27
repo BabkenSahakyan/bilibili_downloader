@@ -1,0 +1,9 @@
+{
+  "playlist": "<bilibili playlist id>",
+  "name": "<playlist name>",
+  "preferred_quality": "480p",
+  "preferred_ext": "mpeg",
+  "titles": [
+    "<video titles in the playlist>"
+  ]
+}
