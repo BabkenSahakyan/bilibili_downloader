@@ -3,7 +3,8 @@
   "name": "<playlist name>",
   "preferred_quality": "480p",
   "preferred_ext": "mpeg",
-  "titles": [
-    "<video titles in the playlist>"
-  ]
+  "titles": {
+    "1": "<1st video titles in the playlist>",
+    "4": "<4th video titles in the playlist>"
+  }
 }
