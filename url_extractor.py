@@ -1,16 +1,16 @@
-import json
+import json5
 import re
 import requests
 
 
-def construct_download_url(playlist: str, index: int):
-    normal_url = "https://www.bilibili.com/video/" + playlist + "/?p=" + str(index)
+def construct_download_url(playlist: str, index: str):
+    normal_url = "https://www.bilibili.com/video/" + playlist + "/?p=" + index
 
     ascii_url = "https%3A%2F%2Fwww.bilibili.com%2Fvideo%2F" + playlist + "%2F%3Fp%3D" + str(index)
     return "https://s4.youtube4kdownloader.com/ajax/getLinks.php?video=" + ascii_url + "&rand=" + get_decoded(normal_url)
 
 
-def extract_urls(downloader_api_url, video_index, csv_output_file, curl_output_file, titles=()):
+def extract_urls(downloader_api_url, video_index, csv_output_file, curl_output_file, titles: dict):
     response = get_urls(downloader_api_url)
     response_json = response.json()
 
@@ -51,7 +51,7 @@ def decode(url, operation="dec", max_chars=3):
         for char in url:
             pos = chars.find(char)
             if pos == -1:
-                enc_str += char  # If character not found, keep it unchanged
+                enc_str += char
             else:
                 if operation == "enc":
                     enc_pos = pos + 5 if pos + 5 < len(chars) else (pos + 5) - len(chars)
@@ -71,21 +71,22 @@ def normalize(value):
 
 
 if __name__ == '__main__':
-    conf_file = open("conf.json", "r")
-    conf = json.loads(conf_file.read())
+    conf_file = open("conf.json5", "r")
+    conf = json5.loads(conf_file.read())
     conf_file.close()
 
     titles = conf["titles"]
     playlist = conf["playlist"]
+    name = conf["name"]
 
-    csv_output_file = open("csv_output.csv", "w")
-    curl_output_file = open("curl_output.txt", "w")
+    csv_output_file = open(name + ".csv", "w")
+    curl_output_file = open(name + ".txt", "w")
 
-    for video_id in range(1, len(titles) + 1):
-        print(titles[video_id - 1])
+    for video_id, name in titles.items():
+        print(video_id + ": " + name)
 
         download_url = construct_download_url(playlist, video_id)
-        extract_urls(download_url, video_id - 1, csv_output_file, curl_output_file, titles=titles)
+        extract_urls(download_url, video_id, csv_output_file, curl_output_file, titles)
 
     curl_output_file.close()
     csv_output_file.close()
