@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import json5
 import re
 import requests
@@ -10,26 +12,26 @@ def construct_download_url(playlist: str, index: str):
     return "https://s4.youtube4kdownloader.com/ajax/getLinks.php?video=" + ascii_url + "&rand=" + get_decoded(normal_url)
 
 
-def extract_urls(downloader_api_url, video_index, csv_output_file, curl_output_file, titles: dict):
+def extract_urls(downloader_api_url, title):
     response = get_urls(downloader_api_url)
     response_json = response.json()
 
+    result = []
     for idx, next_entity in enumerate(response_json["data"]["av"]):
         download_url = next_entity["url"].replace("[[_index_]]", str(idx))
-        title = str(titles[video_index])
         ext = next_entity["ext"]
         quality = next_entity["quality"]
         fps = str(next_entity["fps"])
 
-        curl_output_file.write("curl --output '" +
-                               titles[video_index] + "_" + quality + "_." + ext + "' " +
-                               download_url + "\n")
+        result.append({
+            "quality": quality,
+            "ext": ext,
+            "fps": fps,
+            "title": title + "." + ext,
+            "download_url": download_url
+        })
 
-        csv_output_file.write(quality + "|" +
-                              ext + "|" +
-                              fps + "|" +
-                              title + "." + ext + "|" +
-                              download_url + "\n")
+    return result
 
 
 def get_urls(url):
@@ -70,6 +72,17 @@ def normalize(value):
     return re.sub('[^0-9a-zA-Z]', '', value)[0: 15]
 
 
+def write_to_file(file, result_list):
+    for result in result_list:
+        file.write(result['quality'] + "|" +
+                   result['ext'] + "|" +
+                   result['fps'] + "|" +
+                   result['title'] + "|" +
+                   result['download_url'] + "\n")
+
+    file.flush()
+
+
 if __name__ == '__main__':
     conf_file = open("conf.json5", "r")
     conf = json5.loads(conf_file.read())
@@ -77,16 +90,15 @@ if __name__ == '__main__':
 
     titles = conf["titles"]
     playlist = conf["playlist"]
-    name = conf["name"]
+    file_name = conf["name"]
 
-    csv_output_file = open(name + ".csv", "w")
-    curl_output_file = open(name + ".txt", "w")
+    file = open(file_name + ".csv", "a")
 
-    for video_id, name in titles.items():
-        print(video_id + ": " + name)
+    for video_id, title in titles.items():
+        print(video_id + ": " + title)
 
         download_url = construct_download_url(playlist, video_id)
-        extract_urls(download_url, video_id, csv_output_file, curl_output_file, titles)
+        result_list = extract_urls(download_url, title)
+        write_to_file(file, result_list)
 
-    curl_output_file.close()
-    csv_output_file.close()
+    file.close()
