@@ -1,33 +1,41 @@
 from urllib.error import HTTPError
 import datetime
-import json5
 import urllib.request
 import csv
 import os
 
+import util
 
-def read_url(name, quality, ext):
+
+def read_url(name):
     result = []
     with open(name + ".csv", "r") as urls_file:
         lines = csv.reader(urls_file, delimiter='|')
         for line in lines:
-            if line[0] == quality and line[1] == ext:
-                result.append(line[3::])
+            result.append(line[3::])
 
     return result
 
 
 if __name__ == '__main__':
-    conf_file = open("conf.json5", "r")
-    conf = json5.loads(conf_file.read())
-    conf_file.close()
+    conf = util.read_conf()
 
     name = conf["name"]
     os.makedirs(name, exist_ok=True)
 
-    for title, url in read_url(name, conf["preferred_quality"], conf["preferred_ext"]):
-        print("%s: %s %s" % (str(datetime.datetime.now()), title, url))
-        try:
-            urllib.request.urlretrieve(url, name + "/" + title)
-        except HTTPError:
-            print("skipping " + title)
+    start_idx = conf.get("start", 0)
+    increment = conf.get("increment", 1)
+    next_idx = start_idx
+
+    print("start: %s, increment: %s" % (start_idx, increment))
+
+    urls = read_url(name)
+    for idx, (title, url) in enumerate(urls):
+        if idx == next_idx:
+            print("%s: %s %s" % (str(datetime.datetime.now()), title, url))
+            try:
+                urllib.request.urlretrieve(url, name + "/" + title)
+            except HTTPError:
+                print("skipping " + title)
+            finally:
+                next_idx += increment
