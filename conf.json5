@@ -1,10 +1,9 @@
 {
-  "playlist": "<bilibili playlist id>",
+  "url_template": "<url:...{index}...>", // mast have index param in it
   "name": "<playlist name>",
   "preferred_quality": "480p",
   "preferred_ext": "mpeg",
   "titles": {
-    "1": "<1st video titles in the playlist>",
-    "4": "<4th video titles in the playlist>"
+    "<index>": <title> // this index is used in url_template
   }
 }
