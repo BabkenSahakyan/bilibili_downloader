@@ -4,6 +4,6 @@
   "preferred_quality": "480p",
   "preferred_ext": "mpeg",
   "titles": {
-    "<index>": <title> // this index is used in url_template
+    "<index>": "<title>" // this index is used in url_template
   }
 }
