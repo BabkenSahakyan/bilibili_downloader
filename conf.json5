@@ -3,6 +3,8 @@
   "name": "<playlist name>",
   "preferred_quality": "480p",
   "preferred_ext": "mpeg",
+  "start": 0,
+  "increment": 2,
   "titles": {
     "<index>": "<title>" // this index is used in url_template
   }
