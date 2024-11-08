@@ -1,3 +1,5 @@
+from urllib.error import HTTPError
+import datetime
 import json5
 import urllib.request
 import csv
@@ -24,5 +26,8 @@ if __name__ == '__main__':
     os.makedirs(name, exist_ok=True)
 
     for title, url in read_url(name, conf["preferred_quality"], conf["preferred_ext"]):
-        print(title + " " + url)
-        urllib.request.urlretrieve(url, name + "/" + title)
+        print("%s: %s %s" % (str(datetime.datetime.now()), title, url))
+        try:
+            urllib.request.urlretrieve(url, name + "/" + title)
+        except HTTPError:
+            print("skipping " + title)
