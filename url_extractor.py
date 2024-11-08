@@ -1,14 +1,13 @@
-from typing import Tuple
-
+import urllib.parse
 import json5
 import re
 import requests
 
 
-def construct_download_url(playlist: str, index: str):
-    normal_url = "https://www.bilibili.com/video/" + playlist + "/?p=" + index
+def construct_download_url(url_template: str, index: str):
+    normal_url = url_template.format(index=index)
+    ascii_url = urllib.parse.quote_plus(normal_url)
 
-    ascii_url = "https%3A%2F%2Fwww.bilibili.com%2Fvideo%2F" + playlist + "%2F%3Fp%3D" + str(index)
     return "https://s4.youtube4kdownloader.com/ajax/getLinks.php?video=" + ascii_url + "&rand=" + get_decoded(normal_url)
 
 
@@ -21,7 +20,7 @@ def extract_urls(downloader_api_url, title):
         download_url = next_entity["url"].replace("[[_index_]]", str(idx))
         ext = next_entity["ext"]
         quality = next_entity["quality"]
-        fps = str(next_entity["fps"])
+        fps = str(next_entity.get("fps", "_"))
 
         result.append({
             "quality": quality,
@@ -89,7 +88,7 @@ if __name__ == '__main__':
     conf_file.close()
 
     titles = conf["titles"]
-    playlist = conf["playlist"]
+    url_template = conf["url_template"]
     file_name = conf["name"]
 
     file = open(file_name + ".csv", "a")
@@ -97,7 +96,7 @@ if __name__ == '__main__':
     for video_id, title in titles.items():
         print(video_id + ": " + title)
 
-        download_url = construct_download_url(playlist, video_id)
+        download_url = construct_download_url(url_template, video_id)
         result_list = extract_urls(download_url, title)
         write_to_file(file, result_list)
 
