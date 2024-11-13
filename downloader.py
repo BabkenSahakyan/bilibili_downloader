@@ -1,13 +1,13 @@
-from urllib.error import HTTPError
 import datetime
 import urllib.request
+import urllib.error
 import csv
 import os
 
 import util
 
 
-def read_url(name):
+def read_urls(name):
     result = []
     with open(name + ".csv", "r") as urls_file:
         lines = csv.reader(urls_file, delimiter='|')
@@ -17,25 +17,34 @@ def read_url(name):
     return result
 
 
+def download(file_name, url):
+    if not os.path.isfile(file_name):
+        r = None
+        try:
+            with urllib.request.urlopen(url) as response:
+                r = response
+                headers = response.info()
+                if headers["Content-Type"] == "application/octet-stream":
+                    print("%s: %s %s" % (str(datetime.datetime.now()), title, url))
+                    with open(file_name, 'wb') as out_file:
+                        while block := response.read(1024 * 8):
+                            out_file.write(block)
+                else:
+                    print("Invalid response for %s: %s" % (title, response.read()))
+        except urllib.error.URLError:
+            print("skipping " + title)
+        finally:
+            if r is not None:
+                print("closing response")
+                response.close()
+
+
 if __name__ == '__main__':
     conf = util.read_conf()
 
     name = conf["name"]
     os.makedirs(name, exist_ok=True)
 
-    start_idx = conf.get("start", 0)
-    increment = conf.get("increment", 1)
-    next_idx = start_idx
-
-    print("start: %s, increment: %s" % (start_idx, increment))
-
-    urls = read_url(name)
+    urls = read_urls(name)
     for idx, (title, url) in enumerate(urls):
-        if idx == next_idx:
-            print("%s: %s %s" % (str(datetime.datetime.now()), title, url))
-            try:
-                urllib.request.urlretrieve(url, name + "/" + title)
-            except HTTPError:
-                print("skipping " + title)
-            finally:
-                next_idx += increment
+        download(name + "/" + title, url)
