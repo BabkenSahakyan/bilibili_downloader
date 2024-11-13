@@ -72,14 +72,15 @@ def normalize(value):
     return re.sub('[^0-9a-zA-Z]', '', value)[0: 15]
 
 
-def write_to_file(file, result_list, preferred_quality, preferred_ext):
+def write_to_file(file, result_list, preferred_quality, preferred_ext, honour_preferences):
     for result in result_list:
-        if preferred_quality == result['quality'] and preferred_ext == result['ext']:
+        if (not honour_preferences) or (preferred_quality == result['quality'] and preferred_ext == result['ext']):
             file.write(result['quality'] + "|" +
                        result['ext'] + "|" +
                        result['fps'] + "|" +
                        result['title'] + "|" +
-                       result['download_url'] + "\n")
+                       result['download_url'] +
+                       "\n")
 
     file.flush()
 
@@ -92,6 +93,7 @@ if __name__ == '__main__':
     file_name = conf["name"]
     preferred_quality = conf["preferred_quality"]
     preferred_ext = conf["preferred_ext"]
+    honour_preferences = conf.get("honour_preferences", True)
 
     file = open(file_name + ".csv", "a")
     for video_id, title in titles.items():
@@ -100,7 +102,7 @@ if __name__ == '__main__':
         download_url = construct_download_url(url_template, video_id)
         try:
             result_list = extract_urls(download_url, title)
-            write_to_file(file, result_list, preferred_quality, preferred_ext)
+            write_to_file(file, result_list, preferred_quality, preferred_ext, honour_preferences)
         except Exception as ex:
             print("skipping: " + video_id + ": " + title + "because: " + str(ex))
 
